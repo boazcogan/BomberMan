@@ -17,7 +17,7 @@ int main()
     // Set the start Point for the game box
     int startX = 1; int startY = 1;
     // Create a new instance of the game
-    Player_Board * board = new Player_Board(23, 3, startX, startY);
+    Player_Board * board = new Player_Board(23, 2, startX, startY);
     // currently, only one character can move at once.
     char move = ' ';
     // create a queue to manage the bombs, their threads, and see which ones are
