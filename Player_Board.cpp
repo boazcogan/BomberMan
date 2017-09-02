@@ -174,7 +174,7 @@ void Player_Board::createBomb(int who, int startX, int startY)
     explode(where, 'r', -3, startX, startY);
 
     // wait for 1.5 seconds before end-exploding
-    unsigned int microseconds = 1500000;
+    unsigned int microseconds = 1000000;
     usleep(microseconds);
 
     bool firstSquare = true;
@@ -280,31 +280,48 @@ void Player_Board::countdown(coordinate startingPoint, int startX, int startY)
     // @ symbol. Additional changes for the future include changing players to
     // a 'P' and having them be represented by colors. Then the countdown can be
     // represented by a numerical value.
-    unsigned int microseconds = 1000000;
-    for (int i = 0; i < 3; i++)
+    unsigned int microseconds = 200000;
+    for (int i = 0; i < 15; i++)
     {
         // if we have waited zero seconds then we have 3 seconds to go. In this,
         // location we can write a '3' instead of an '@'. This change has not
         // yet been made due to conflict with character icons.
-        if ( i == 0 )
+        if ( i <= 5 )
         {
+            //Check to see if there is another bomb blew up this one.
             usleep(microseconds);
+            if (board->getSquareVal(startingPoint) == -3)
+            {
+                board->SetVal(startingPoint, 0);
+                return;
+            }
             mvaddch(startingPoint.x+startX, (startingPoint.y*2)+startY, '@');
 	          board->SetVal(startingPoint, 3);
         }
-        if ( i == 1 )
+        else if ( i <= 10 )
         {
             usleep(microseconds);
+            if (board->getSquareVal(startingPoint) == -3)
+            {
+                board->SetVal(startingPoint, 0);
+                return;
+            }
             mvaddch(startingPoint.x+startX, (startingPoint.y*2)+startY, '@');
 	          board->SetVal(startingPoint, 2);
         }
-        if ( i == 2 )
+        else if ( i <= 15 )
         {
             usleep(microseconds);
+            if (board->getSquareVal(startingPoint) == -3)
+            {
+                board->SetVal(startingPoint, 0);
+                return;
+            }
             mvaddch(startingPoint.x+startX, (startingPoint.y*2)+startY, '@');
 	          board->SetVal(startingPoint, 1);
         }
     }
+    board->SetVal(startingPoint, 0);
 
 }
 

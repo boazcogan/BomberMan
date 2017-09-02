@@ -2,6 +2,7 @@
 #include "Coordinate.cpp"
 #include <iostream>
 #include <curses.h>
+#include "Square.cpp"
 
 using namespace std;
 
@@ -15,20 +16,20 @@ GameBoard::GameBoard(int size)
     gameSize = size;
     // Create the GameBoard with size rows and columns, a GameBoards size
     // is always odd.
-    board = new int*[size];
+    board = new Square*[size];
     // The GameBoard is 2-dimensional so a loop is required to populate the
     // initial array with arrays
     for (int i=0; i<size; i++)
     {
-       board[i] = new int[size];
+       board[i] = new Square[size];
     }
     // Create the outer walls of the GameBoard. These are represented by -1
     for(int i = 0; i<size; i++)
     {
-        board[0][i] = -1;
-        board[size-1][i] = -1;
-        board[i][0] = -1;
-        board[i][size-1] = -1;
+        board[0][i].val = -1;
+        board[size-1][i].val = -1;
+        board[i][0].val = -1;
+        board[i][size-1].val = -1;
     }
     // Fill the entire array with destructable walls, these are represented by
     // the number 5.
@@ -36,7 +37,7 @@ GameBoard::GameBoard(int size)
     {
         for (int j = 1; j<size-1;j++)
         {
-            board[i][j] = 5;
+            board[i][j] = Square();
         }
     }
     // Carve out a path for the Players to move through
@@ -49,7 +50,7 @@ void GameBoard::Depth_First(int r, int c, int numCols, int numRows)
 {
     //This function will: carve a maze based on the depth first method.
     // set where we currently are to a movable square
-    board[r][c] = 0;
+    board[r][c].val = 0;
     // choose a random direction
     int rd = rand()%4;
     for (int d=0; d<4;d++)
@@ -57,30 +58,30 @@ void GameBoard::Depth_First(int r, int c, int numCols, int numRows)
         // If the random direction was right and there is a wall two squares to
         // the right, then the square next to the current location can become a
         // movable location
-        if (rd == 0 && c+2<numCols &&board[r][c+2] != 0)
+        if (rd == 0 && c+2<numCols &&board[r][c+2].val != 0)
         {
-            board[r][c+1] = 0;
+            board[r][c+1].val = 0;
             Depth_First(r, c+2, numCols, numRows);
         }
         // If the previous check failed then either the random direction was
         // initially right or the space two items to the right was already free,
         // in this case we just move on to the next direction and repeat the
         // process for up,
-        else if (rd == 1 && r+2<numRows &&board[r+2][c] != 0)
+        else if (rd == 1 && r+2<numRows &&board[r+2][c].val != 0)
         {
-            board[r+1][c] = 0;
+            board[r+1][c].val = 0;
             Depth_First(r+2, c, numCols, numRows);
         }
         // then left,
-        else if (rd == 2 && c>2 &&board[r][c-2] != 0)
+        else if (rd == 2 && c>2 &&board[r][c-2].val != 0)
         {
-            board[r][c-1] = 0;
+            board[r][c-1].val = 0;
             Depth_First(r, c-2, numCols, numRows);
         }
         // and finally right
-        else if (rd == 3 && r>2 && board[r-2][c] != 0)
+        else if (rd == 3 && r>2 && board[r-2][c].val != 0)
         {
-            board[r-1][c] = 0;
+            board[r-1][c].val = 0;
             Depth_First(r-2, c, numCols, numRows);
         }
         // At this point either we have made a modification or we have already
@@ -94,7 +95,14 @@ void GameBoard::Depth_First(int r, int c, int numCols, int numRows)
 int GameBoard::getSquareVal(coordinate * location)
 {
     // Access the value at the passed location
-    return board[location->x][location->y];
+    return board[location->x][location->y].val;
+}
+
+
+int GameBoard::getSquareVal(coordinate location)
+{
+    // Access the value at the passed location
+    return board[location.x][location.y].val;
 }
 
 
@@ -106,13 +114,13 @@ void GameBoard::PrintBoard()
     {
         for (int j = 0; j<gameSize;j++)
         {
-            if (board[i][j] > -1)
+            if (board[i][j].val > -1)
             {
-                cout<<" "<<board[i][j];
+                cout<<" "<<board[i][j].val;
             }
             else
             {
-                cout<<board[i][j];
+                cout<<board[i][j].val;
             }
         }
     cout<<"\n";
@@ -127,7 +135,7 @@ void GameBoard::DisplayGameBoard(int startCoordinateX, int startCoordinateY)
     {
         for (int j = 0; j < gameSize; j++)
         {
-            if (board[i][j] == -1 || board[i][j] == 5)
+            if (board[i][j].val == -1 || board[i][j].val == 5)
             {
                 mvaddch(i+startCoordinateX, (j*2)+startCoordinateY,'*');
             }
@@ -140,23 +148,23 @@ bool GameBoard::Move(coordinate * from, coordinate * to, int startX, int startY,
 {
     // If the square is occupied by anything other than an explosion or a empty
     // square then the move was unsuccessful
-    if (board[to->x][to->y] != 0 && board[to->x][to->y] != -3)
+    if (board[to->x][to->y].val != 0 && board[to->x][to->y].val != -3)
     {
         return false;
     }
     // If the board was occupied by an explosion return true and the square that
     // the player occupied should be set to empty and the move was successful
-    else if (board[to->x][to->y] == -3)
+    else if (board[to->x][to->y].val == -3)
     {
-        board[from->x][from->y] = 0;
+        board[from->x][from->y].val = 0;
         mvaddch(from->x+startX,(from->y*2)+startY,' ');
         return true;
     }
     // Otherwise the board at the desired square is empty. In this case the
     // Player should have the new square set to their character and the old
     // square should be set to empty.
-    board[to->x][to->y] = -2;
-    board[from->x][from->y] = 0;
+    board[to->x][to->y].val = -2;
+    board[from->x][from->y].val = 0;
     mvaddch(from->x+startX,(from->y*2)+startY,' ');
     mvaddch(to->x+startX,(to->y*2)+startY, who);
 
@@ -167,14 +175,14 @@ bool GameBoard::Move(coordinate * from, coordinate * to, int startX, int startY,
 void GameBoard::SetPlayer(coordinate * location, int startX, int startY, char who)
 {
     // Set the Board at the given location to a player.
-    board[location->x][location->y] = -2;
+    board[location->x][location->y].val = -2;
 }
 
 
 void GameBoard::removePlayer(coordinate * location)
 {
     // Set the players current location to empty
-    board[location->x][location->y] = 0;
+    board[location->x][location->y].val = 0;
 }
 
 
@@ -182,25 +190,31 @@ bool GameBoard::ExplodeSquare(coordinate location, int status_marker, int startX
 {
     // If the current square is a player or a wall then the square should be
     // exploded and the function should return false.
-    if (board[location.x][location.y] == -2 || board[location.x][location.y] == 5)
+    if (board[location.x][location.y].val == -2 || board[location.x][location.y].val == 5 ||
+    board[location.x][location.y].val == 3 || board[location.x][location.y].val == 2 ||
+    board[location.x][location.y].val == 1)
     {
         // a Player has died or a wall has been encountered. The explode
         // should be signalled to end.
         mvaddch(location.x+startX,(location.y*2)+startY, '+');
-        board[location.x][location.y] = status_marker;
+        board[location.x][location.y].val = status_marker;
+        // increment the number of current explosions the square is experiencing
+        board[location.x][location.y].Explodes++;
         return false;
     }
     // If the square is anything other than either of the above cases or empty,
     // then the square should not be exploded as it is probably one of the outer
     // bounds.
-    else if(board[location.x][location.y] < 0 && board[location.x][location.y] != -3)
+    else if(board[location.x][location.y].val < 0 && board[location.x][location.y].val != -3)
     {
         return false;
     }
     // draw the character at the current square to represent an explosion.
     mvaddch(location.x+startX,(location.y*2)+startY, '+');
     // set the boards status to an exploded square.
-    board[location.x][location.y] = status_marker;
+    board[location.x][location.y].val = status_marker;
+    // increment the number of explodes the square is experiencing
+    board[location.x][location.y].Explodes++;
     // return true to signal the board to explode the next square.
     return true;
 }
@@ -211,14 +225,20 @@ bool GameBoard::EndExplodeSquare(coordinate location, bool firstSquare, int star
     // If we are not end exploding the very first square (to catch the other end
     // explode calls), and there is anything in the current square, then return
     // false.
-    if(board[location.x][location.y] != -3 && !firstSquare )
+    if(board[location.x][location.y].val != -3)
     {
         return false;
     }
     // If the current square is a previously exploded square then set the value
     // to an empty square, then return true.
+    if (board[location.x][location.y].Explodes > 1)
+    {
+        --board[location.x][location.y].Explodes;
+        return true;
+    }
     mvaddch(location.x+startX,(location.y*2)+startY, ' ');
-    board[location.x][location.y] = 0;
+    board[location.x][location.y].val = 0;
+    --board[location.x][location.y].Explodes;
     return true;
 }
 
@@ -226,10 +246,10 @@ bool GameBoard::EndExplodeSquare(coordinate location, bool firstSquare, int star
 void GameBoard::SetVal(coordinate * location, int value)
 {
     // Set the value at the passed location to the passed value
-    board[location->x][location->y] = value;
+    board[location->x][location->y].val = value;
 }
 void GameBoard::SetVal(coordinate location, int value)
 {
     // Set the value at the given location to the passed value.
-    board[location.x][location.y] = value;
+    board[location.x][location.y].val = value;
 }

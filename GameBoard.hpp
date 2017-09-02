@@ -1,5 +1,5 @@
 #include "Coordinate.cpp"
-
+#include "Square.cpp"
 
 #ifndef GAMEBOARD_HPP
 #define GAMEBOARD_HPP
@@ -39,12 +39,13 @@ class GameBoard
         bool EndExplodeSquare(coordinate location, bool firstSquare, int startX, int startY);
         // Gets the value stored at the given location
         int getSquareVal(coordinate * location);
+        int getSquareVal(coordinate location);
         // Generates the maze that the players will play on
         void Depth_First(int r, int c, int NumCols, int NumRows);
         // Displays the Board.
         void DisplayGameBoard(int startCoordinateX, int startCoordinateY);
     private:
-        int ** board;
+        Square ** board;
         int gameSize;
 
 };
